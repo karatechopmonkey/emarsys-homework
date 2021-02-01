@@ -1,12 +1,43 @@
 package com.emarsys.duedatecalculator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 class DueDateCalculatorTest {
+	
+	@Test
+	@Timeout(value = 500, unit = TimeUnit.MILLISECONDS)
+	void When_Friday11H30M_And_TurnAround1000H_Expect_Monday11H30M() {
+		// given
+		DueDateCalculator calc = new DueDateCalculator();
+		LocalDateTime submitDateTime = LocalDateTime.of(2021, 2, 5, 11, 30);
+		int turnAroundTimeInHours = 1000;
+		// when
+		LocalDateTime dueDate = calc.calculateDueDate(submitDateTime, turnAroundTimeInHours);
+		// then
+		LocalDateTime expectedDueDate = LocalDateTime.of(2021, 7, 30, 11, 30);
+		assertEquals(expectedDueDate, dueDate);
+	}
+	
+	@Test
+	@Timeout(value = 1, unit = TimeUnit.SECONDS)
+	void When_Friday11H30M_And_TurnAround1000000H_Expect_Monday11H30M() {
+		// given
+		DueDateCalculator calc = new DueDateCalculator();
+		LocalDateTime submitDateTime = LocalDateTime.of(2021, 2, 5, 11, 30);
+		int turnAroundTimeInHours = 1_000_000;
+		// when
+		LocalDateTime dueDate = calc.calculateDueDate(submitDateTime, turnAroundTimeInHours);
+		// then
+		LocalDateTime expectedDueDate = LocalDateTime.of(2500, 3, 26, 11, 30);
+		assertEquals(expectedDueDate, dueDate);
+	}
 
 	@Test
 	void When_Monday14H22M_And_TurnAround96H_Expect_2WeeksLaterWednesday14H22M() {
@@ -74,6 +105,32 @@ class DueDateCalculatorTest {
 	}
 	
 	@Test
+	void When_LeapYearThursday11H30M_And_TurnAround24H_Expect_Tuesday11H30M() {
+		// given
+		DueDateCalculator calc = new DueDateCalculator();
+		LocalDateTime submitDateTime = LocalDateTime.of(2020, 2, 27, 11, 30);
+		int turnAroundTimeInHours = 24;
+		// when
+		LocalDateTime dueDate = calc.calculateDueDate(submitDateTime, turnAroundTimeInHours);
+		// then
+		LocalDateTime expectedDueDate = LocalDateTime.of(2020, 3, 3, 11, 30);
+		assertEquals(expectedDueDate, dueDate);
+	}
+	
+	@Test
+	void When_NonLeapYearFriday11H30M_And_TurnAround8H_Expect_Monday11H30M() {
+		// given
+		DueDateCalculator calc = new DueDateCalculator();
+		LocalDateTime submitDateTime = LocalDateTime.of(2021, 2, 26, 11, 30);
+		int turnAroundTimeInHours = 8;
+		// when
+		LocalDateTime dueDate = calc.calculateDueDate(submitDateTime, turnAroundTimeInHours);
+		// then
+		LocalDateTime expectedDueDate = LocalDateTime.of(2021, 3, 1, 11, 30);
+		assertEquals(expectedDueDate, dueDate);
+	}
+	
+	@Test
 	void When_Friday11H30M_And_TurnAround8H_Expect_Monday11H30M() {
 		// given
 		DueDateCalculator calc = new DueDateCalculator();
@@ -122,6 +179,16 @@ class DueDateCalculatorTest {
 		DueDateCalculator calc = new DueDateCalculator();
 		LocalDateTime submitDateTime = LocalDateTime.of(2021, 2, 5, 9, 30);
 		int turnAroundTimeInHours = 0;
+		// when - then
+		assertThrows(IllegalArgumentException.class, () -> calc.calculateDueDate(submitDateTime, turnAroundTimeInHours));
+	}
+	
+	@Test
+	void When_Friday9H30M_And_TurnAroundNegative1H_Expect_IllegalArgumentException() {
+		// given
+		DueDateCalculator calc = new DueDateCalculator();
+		LocalDateTime submitDateTime = LocalDateTime.of(2021, 2, 5, 9, 30);
+		int turnAroundTimeInHours = -1;
 		// when - then
 		assertThrows(IllegalArgumentException.class, () -> calc.calculateDueDate(submitDateTime, turnAroundTimeInHours));
 	}
